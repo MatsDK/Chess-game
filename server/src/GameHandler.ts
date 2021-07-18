@@ -12,6 +12,5 @@ export class GameHandler {
     this.players = players;
     this.game = game;
     this.io = io;
-    console.log(this.game);
   }
 }

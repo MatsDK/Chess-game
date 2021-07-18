@@ -35,9 +35,24 @@ io.on("connection", (socket: Socket) => {
 
     const thisGame: GameType = games.get(gameData.id)!;
 
-    io.to(gameData.id).emit("players", thisGame.players);
+    const thesePlayers = [...thisGame.players],
+      playerIdx = thisGame.players.findIndex(
+        (player) => player.id === socket.id
+      );
 
-    if (thisGame.players.length === 2)
+    if (playerIdx != null)
+      thesePlayers[playerIdx] = {
+        ...thisGame.players[playerIdx],
+        me: true,
+      };
+
+    io.to(socket.id).emit("players", thesePlayers);
+    io.to(thisGame.players.find((player) => !player.me)!.id).emit(
+      "players",
+      thisGame.players
+    );
+
+    if (thisGame.players.length === 2) {
       thisGame.gameHandler = new GameHandler(
         {
           white: thisGame.players[0],
@@ -46,6 +61,9 @@ io.on("connection", (socket: Socket) => {
         thisGame,
         io
       );
+
+      io.to(thisGame.id).emit("startGame", thisGame.players);
+    }
   });
 
   socket.on("disconnect", () => {

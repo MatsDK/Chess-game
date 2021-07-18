@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { Socket } from "socket.io-client";
 import { socket, SocketContext } from "./context/socket";
+import Board from "./Board";
 import { User } from "./types";
 
 const GameView = () => {
@@ -41,11 +42,15 @@ interface GameProps {
 const Game: React.FC<GameProps> = ({ name, id }) => {
   const socket: Socket = useContext(SocketContext);
   const [players, setPlayers] = useState<User[]>([]);
+  const [me, setMe] = useState<null | User>(null);
 
   useEffect(() => {
     if (name) socket.emit("game", { name, id });
 
     socket.on("players", (players) => {
+      const me = players.find((player: User) => player.me);
+      if (me) setMe(me);
+
       setPlayers(players);
     });
 
@@ -57,6 +62,7 @@ const Game: React.FC<GameProps> = ({ name, id }) => {
       {players.map((user: User) => (
         <div key={user.id}>{user.name}</div>
       ))}
+      {me && <Board me={me} />}
     </div>
   );
 };
