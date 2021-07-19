@@ -1,5 +1,5 @@
 import { Socket, Server } from "socket.io";
-import { GameHandler } from "./GameHandler";
+import { GameHandler, SocketsType } from "./GameHandler";
 import { games, users } from "./games";
 import { GameType, User } from "./types";
 
@@ -52,6 +52,14 @@ io.on("connection", (socket: Socket) => {
       thisGame.players
     );
 
+    const sockets = io.sockets.sockets.entries(),
+      userSockets: SocketsType = { black: null, white: null };
+
+    for (const [id, _] of sockets) {
+      if (id === thisGame.players[0]?.id) userSockets.white = _;
+      if (id === thisGame.players[1]?.id) userSockets.black = _;
+    }
+
     if (thisGame.players.length === 2) {
       thisGame.gameHandler = new GameHandler(
         {
@@ -59,10 +67,15 @@ io.on("connection", (socket: Socket) => {
           black: thisGame.players[1],
         },
         thisGame,
-        io
+        io,
+        userSockets
       );
 
-      io.to(thisGame.id).emit("startGame", thisGame.players);
+      io.to(thisGame.id).emit(
+        "startGame",
+        thisGame.gameHandler.players,
+        thisGame.gameHandler.pieces
+      );
     }
   });
 
@@ -76,11 +89,13 @@ io.on("connection", (socket: Socket) => {
         games.set(id, {
           id,
           gameHandler: null,
-          //   gameHandler: thisGame.gameHandler,
           players: thisGame.players.filter(
             (player: User) => player.id !== socket.id
           ),
         });
+
+        io.to(thisGame.id).emit("disconnectedPlayer", games.get(id)!.players);
+        socket.leave(thisGame.id);
       }
   });
 });

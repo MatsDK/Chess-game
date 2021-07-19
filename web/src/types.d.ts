@@ -13,3 +13,7 @@ export interface PlayersObject {
   white: User;
   black: User;
 }
+
+export type Pieces = Array<(Piece | 0)[]>;
+
+export type PiecePos = { x: number; y: number };

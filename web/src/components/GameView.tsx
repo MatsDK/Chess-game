@@ -1,9 +1,9 @@
 import { useContext, useEffect, useState } from "react";
 import { useHistory, useParams } from "react-router-dom";
 import { Socket } from "socket.io-client";
-import { socket, SocketContext } from "./context/socket";
+import { socket, SocketContext } from "../context/socket";
 import Board from "./Board";
-import { User } from "./types";
+import { User } from "../types";
 
 const GameView = () => {
   const [name, setName] = useState<string | null>(null);

@@ -1,8 +1,8 @@
-import Navbar from "./Navbar";
-import GameView from "./GameView";
-import Home from "./Home";
+import Navbar from "./components/Navbar";
+import GameView from "./components/GameView";
+import Home from "./components/Home";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
-import GamesDashboard from "./Dashboard";
+import GamesDashboard from "./components/Dashboard";
 
 const App = () => {
   return (

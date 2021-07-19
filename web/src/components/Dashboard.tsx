@@ -2,7 +2,7 @@ import axios from "axios";
 import { nanoid } from "nanoid";
 import { useEffect, useState } from "react";
 import { Redirect, useHistory } from "react-router-dom";
-import { GameType } from "./types";
+import { GameType } from "../types";
 
 const GamesDashboard = () => {
   const [name, setName] = useState<string | null>(null);
