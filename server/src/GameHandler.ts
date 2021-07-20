@@ -11,8 +11,10 @@ export class GameHandler {
   game: GameType;
   sockets: SocketsType;
   io: Server;
-  pieces: Array<(Piece | 0)[]>;
-  activePlayer: string;
+  pieces: Array<(Piece | 0)[]> = Array(8)
+    .fill(0)
+    .map((_) => Array(8).fill(0));
+  activePlayer: string = "";
 
   constructor(
     players: PlayersType,
@@ -24,11 +26,6 @@ export class GameHandler {
     this.game = game;
     this.io = io;
     this.sockets = sockets;
-    this.activePlayer = "";
-
-    this.pieces = Array(8)
-      .fill(0)
-      .map((_) => Array(8).fill(0));
 
     for (const i in this.pieces)
       for (const j in this.pieces[i])

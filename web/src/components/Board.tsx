@@ -16,23 +16,24 @@ interface Props {
 const Board: React.FC<Props> = ({ me }) => {
   const forceUpdate = useForceUpdate();
   const socket: Socket = useContext(SocketContext);
-  const [Board, setBoard] = useState<GameBoard>(new GameBoard());
+  const [Board] = useState<GameBoard>(new GameBoard());
   const [MePlayer, setMePlayer] = useState<User | null>(null);
   const [Opponent, setOpponent] = useState<User | null>(null);
   const [flipBoard, setFlipBoard] = useState<boolean>(false);
+  const [highlighted, setHighlighted] = useState<number[][]>([]);
 
   useEffect(() => {
     Board.setSocket(socket);
 
     socket.on("startGame", (players, pieces) => {
       if (Board.gameStarted) Board.reset();
+      Board.players = players;
       Board.setPieces(pieces);
 
       const playersArr: User[] = Object.values(players);
       const meIdx = playersArr.findIndex((player: User) => player.id === me.id);
       if (meIdx != null) playersArr[meIdx].me = true;
 
-      Board.players = players;
       Board.gameStarted = true;
 
       if (players.black.id === me.id) setFlipBoard(true);
@@ -58,10 +59,12 @@ const Board: React.FC<Props> = ({ me }) => {
     socket.on("disconnectedPlayer", () => {
       setOpponent(null);
       setFlipBoard(false);
+
+      socket.disconnect();
     });
 
     return () => {};
-  }, [socket, Board, me]);
+  }, [Board, me, socket]);
 
   return (
     <div style={{ display: "flex" }}>
@@ -78,36 +81,63 @@ const Board: React.FC<Props> = ({ me }) => {
               let isPiece = false;
               if (y instanceof Piece) isPiece = true;
 
+              let isHighlighted = false;
+              if (
+                (flipBoard &&
+                  highlighted.find(
+                    ([x1, y1]) => x1 === 7 - idxX && y1 === 7 - idxY
+                  )) ||
+                (!flipBoard &&
+                  highlighted.find(([x1, y1]) => x1 === idxX && y1 === idxY))
+              )
+                isHighlighted = true;
+
               return (
                 <div
                   key={`${idxX}-${idxY}`}
                   className={`cell ${gray ? "gray" : ""}`}
                   onClick={() => {
-                    if (flipBoard) return Board.click(7 - idxX, 7 - idxY);
+                    let highlighted = [];
 
-                    Board.click(idxX, idxY);
+                    if (flipBoard)
+                      highlighted = Board.click(7 - idxX, 7 - idxY);
+                    else highlighted = Board.click(idxX, idxY);
+
+                    setHighlighted(highlighted);
                   }}
-                  style={{ overflow: "hidden" }}
+                  style={{ position: "relative", overflow: "hidden" }}
                 >
+                  {isHighlighted && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        color: "red",
+                        width: 100,
+                        height: 100,
+                        borderRadius: "50%",
+                        backgroundColor: "#27e",
+                      }}
+                    />
+                  )}
                   {isPiece && (
                     <img
                       style={{
                         marginTop:
                           isPiece &&
-                          (y as Piece).playerId == Board.players?.black.id
+                          (y as Piece).playerId === Board.players?.black.id
                             ? -335
                             : -235,
                         marginLeft: (piecesOffset as any)[(y as Piece).name],
                         pointerEvents: "none",
                         transform: "scale(0.3)",
+                        zIndex: 200,
                       }}
                       src={pieces}
                       alt="piece"
                     />
                   )}
-                  {isPiece &&
-                    (y as Piece).playerId === Board.players?.black.id &&
-                    "black"}
                 </div>
               );
             })}
