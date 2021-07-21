@@ -57,9 +57,7 @@ const Board: React.FC<Props> = ({ me }) => {
     });
 
     socket.on("check", () => {
-      if (Board.isCheck()) {
-        console.log("checked");
-      }
+      if (Board.isCheckMate()) console.log("checkmate");
     });
 
     socket.on("disconnectedPlayer", () => {

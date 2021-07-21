@@ -87,21 +87,50 @@ export class Board {
     this.pieces[from.x][from.y] = 0;
   }
 
-  isCheck(): boolean {
-    if (!this.pieces.length || !this.me) return false;
-    const attacks: number[][] = [],
-      kingPos = this.getKingPos();
+  isCheckMate(): boolean {
+    if (!this.isCheck({})) return false;
 
     for (let i = 0; i <= 7; i++) {
       for (let j = 0; j <= 7; j++) {
         const thisPiece = this.pieces[i][j];
+
+        if (!(thisPiece instanceof Piece) || thisPiece.playerId !== this.me?.id)
+          continue;
+
+        for (const [x, y] of thisPiece.getMoves(this.pieces)) {
+          [thisPiece.x, thisPiece.y] = [x, y];
+          this.pieces[x][y] = this.pieces[i][j];
+          this.pieces[i][j] = 0;
+
+          const checked = this.isCheck({ pieces: this.pieces });
+
+          this.pieces[i][j] = this.pieces[x][y];
+          this.pieces[x][y] = 0;
+          [thisPiece.x, thisPiece.y] = [i, j];
+
+          if (!checked) return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
+  isCheck({ pieces = this.pieces }: { pieces?: Pieces }): boolean {
+    if (!pieces.length || !this.me) return false;
+    const kingPos = this.getKingPos(pieces),
+      attacks: number[][] = [];
+
+    for (let i = 0; i <= 7; i++) {
+      for (let j = 0; j <= 7; j++) {
+        const thisPiece = pieces[i][j];
 
         if (
           thisPiece instanceof Piece &&
           (thisPiece as Piece).playerId !== this.me?.id &&
           kingPos &&
           thisPiece
-            .getMoves(this.pieces, this.me?.id)
+            .getMoves(pieces, this.me?.id)
             .find(([x, y]) => x === kingPos[0] && y === kingPos[1])
         )
           attacks.push([i, j]);
@@ -111,10 +140,10 @@ export class Board {
     return !!attacks.length;
   }
 
-  getKingPos(): number[] | undefined {
+  getKingPos(pieces: Pieces): number[] | undefined {
     for (let i = 0; i <= 7; i++) {
       for (let j = 0; j <= 7; j++) {
-        const thisPiece = this.pieces[i][j];
+        const thisPiece = pieces[i][j];
 
         if (
           thisPiece instanceof Piece &&
