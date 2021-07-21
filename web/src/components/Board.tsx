@@ -56,6 +56,12 @@ const Board: React.FC<Props> = ({ me }) => {
       forceUpdate();
     });
 
+    socket.on("check", () => {
+      if (Board.isCheck()) {
+        console.log("checked");
+      }
+    });
+
     socket.on("disconnectedPlayer", () => {
       setOpponent(null);
       setFlipBoard(false);

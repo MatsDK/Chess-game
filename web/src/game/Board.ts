@@ -87,5 +87,46 @@ export class Board {
     this.pieces[from.x][from.y] = 0;
   }
 
+  isCheck(): boolean {
+    if (!this.pieces.length || !this.me) return false;
+    const attacks: number[][] = [],
+      kingPos = this.getKingPos();
+
+    for (let i = 0; i <= 7; i++) {
+      for (let j = 0; j <= 7; j++) {
+        const thisPiece = this.pieces[i][j];
+
+        if (
+          thisPiece instanceof Piece &&
+          (thisPiece as Piece).playerId !== this.me?.id &&
+          kingPos &&
+          thisPiece
+            .getMoves(this.pieces, this.me?.id)
+            .find(([x, y]) => x === kingPos[0] && y === kingPos[1])
+        )
+          attacks.push([i, j]);
+      }
+    }
+
+    return !!attacks.length;
+  }
+
+  getKingPos(): number[] | undefined {
+    for (let i = 0; i <= 7; i++) {
+      for (let j = 0; j <= 7; j++) {
+        const thisPiece = this.pieces[i][j];
+
+        if (
+          thisPiece instanceof Piece &&
+          (thisPiece as Piece).playerId === this.me?.id &&
+          thisPiece.name === "K"
+        )
+          return [i, j];
+      }
+    }
+
+    return;
+  }
+
   reset() {}
 }

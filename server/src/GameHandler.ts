@@ -46,12 +46,10 @@ export class GameHandler {
   }
 
   setActivePlayer(playerId?: string) {
-    if (playerId) this.io.to(this.game.id).emit("setActivePlayer", playerId);
-    else {
-      const nextActivePlayer = this.getNextActivePlayer();
-      this.io.to(this.game.id).emit("setActivePlayer", nextActivePlayer);
-      playerId = nextActivePlayer;
-    }
+    if (!playerId) playerId = this.getNextActivePlayer();
+
+    this.io.to(this.game.id).emit("setActivePlayer", playerId);
+    this.io.to(playerId).emit("check");
 
     this.activePlayer = playerId;
   }
@@ -68,9 +66,8 @@ export class GameHandler {
       this.pieces[from.x][from.y],
     ];
 
-    this.setActivePlayer();
-
     this.io.to(this.game.id).emit("movePiece", from, to);
+    this.setActivePlayer();
   }
 }
 
