@@ -41,8 +41,41 @@ export class GameHandler {
 
     this.setActivePlayer(this.players.white.id);
 
-    for (const socket of Object.values(this.sockets))
+    for (const socket of Object.values(this.sockets)) {
       socket?.on("move", ({ from, to }) => this.move(from, to));
+      socket?.on("checkmate", (playerId) => this.checkMate(playerId));
+      socket?.on("newGame", () => this.newGame());
+    }
+  }
+
+  newGame() {
+    const tmp = this.players.white;
+    this.players.white = this.players.black;
+    this.players.black = tmp;
+
+    this.setActivePlayer(this.players.white.id);
+
+    this.pieces = Array(8)
+      .fill(0)
+      .map((_) => Array(8).fill(0));
+
+    for (const i in this.pieces)
+      for (const j in this.pieces[i])
+        if (typeof initialBoard[j][i] === "string" && initialBoard[j][i] !== 0)
+          this.pieces[i][j] = new Piece(
+            Number(i),
+            Number(j),
+            initialBoard[j][i] as string,
+            Number(j) === 7 || Number(j) === 6
+              ? this.players.white.id
+              : this.players.black.id
+          );
+
+    this.io.to(this.game.id).emit("startGame", this.players, this.pieces);
+  }
+
+  checkMate(playerId: string | undefined) {
+    this.io.to(this.game.id).emit("endGame");
   }
 
   setActivePlayer(playerId?: string) {

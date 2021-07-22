@@ -157,5 +157,7 @@ export class Board {
     return;
   }
 
-  reset() {}
+  reset() {
+    this.pieces = [];
+  }
 }

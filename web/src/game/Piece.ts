@@ -106,14 +106,19 @@ export class Piece {
   ): number[][] =>
     this.getMovesWithDirections(pieces, queen_directions, opponentId);
 
-  getRookMoves = (pieces: Pieces, opponentId: string | undefined): number[][] =>
-    this.getMovesWithDirections(pieces, rook_directions, opponentId);
-
   getBishopMoves = (
     pieces: Pieces,
     opponentId: string | undefined
   ): number[][] =>
     this.getMovesWithDirections(pieces, bishop_direction, opponentId);
+
+  getRookMoves = (
+    pieces: Pieces,
+    opponentId: string | undefined
+  ): number[][] => {
+    console.log("get castle moves");
+    return this.getMovesWithDirections(pieces, rook_directions, opponentId);
+  };
 
   getKnightMoves(pieces: Pieces, opponentId: string | undefined): number[][] {
     const moves: number[][] = [];

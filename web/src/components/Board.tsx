@@ -21,6 +21,7 @@ const Board: React.FC<Props> = ({ me }) => {
   const [Opponent, setOpponent] = useState<User | null>(null);
   const [flipBoard, setFlipBoard] = useState<boolean>(false);
   const [highlighted, setHighlighted] = useState<number[][]>([]);
+  const [gameEnded, setGameEnded] = useState<boolean>(false);
 
   useEffect(() => {
     Board.setSocket(socket);
@@ -36,13 +37,14 @@ const Board: React.FC<Props> = ({ me }) => {
 
       Board.gameStarted = true;
 
-      if (players.black.id === me.id) setFlipBoard(true);
-
       setMePlayer(playersArr[meIdx]);
       setOpponent(playersArr[!meIdx ? 1 : 0]);
 
       Board.me = playersArr[meIdx];
       Board.opponent = playersArr[!meIdx ? 1 : 0];
+
+      setFlipBoard(players.black.id === me.id);
+      setGameEnded(false);
     });
 
     socket.on("setActivePlayer", (playerId) => {
@@ -57,7 +59,9 @@ const Board: React.FC<Props> = ({ me }) => {
     });
 
     socket.on("check", () => {
-      if (Board.isCheckMate()) console.log("checkmate");
+      if (Board.isCheckMate()) {
+        socket.emit("checkmate", Board.me?.id);
+      }
     });
 
     socket.on("disconnectedPlayer", () => {
@@ -67,12 +71,29 @@ const Board: React.FC<Props> = ({ me }) => {
       socket.disconnect();
     });
 
+    socket.on("endGame", () => {
+      setGameEnded(true);
+    });
+
     return () => {};
   }, [Board, me, socket]);
 
   return (
     <div style={{ display: "flex" }}>
-      <div className="Board">
+      <div
+        className="Board"
+        style={{ pointerEvents: Board.gameStarted ? "all" : "none" }}
+      >
+        <div
+          style={{
+            position: "absolute",
+            zIndex: 300,
+            color: "#27e",
+            fontSize: 40,
+          }}
+        >
+          {gameEnded && <h1>game ended</h1>}
+        </div>
         {(
           (flipBoard ? getFlippedBoard(Board.pieces) : Board.pieces) as Pieces
         ).map((x, idxX) => (
@@ -164,6 +185,17 @@ const Board: React.FC<Props> = ({ me }) => {
             </div>
           )}
         </div>
+        {gameEnded && (
+          <div>
+            <button
+              onClick={() => {
+                if (socket) socket.emit("newGame");
+              }}
+            >
+              New Game
+            </button>
+          </div>
+        )}
         <div>
           {Board.gameStarted && (
             <div>
