@@ -5,7 +5,7 @@ import { GameType, User } from "./types";
 
 export const io: Server = require("socket.io")(8001, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: process.env.WEB_URL,
   },
 });
 

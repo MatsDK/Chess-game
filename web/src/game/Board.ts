@@ -4,7 +4,7 @@ import { Piece } from "./Piece";
 
 export class Board {
   pieces: Pieces = [];
-  gameStarted: boolean;
+  gameStarted: boolean = false;
   players?: { white: User; black: User };
   activePlayer?: string;
   me?: User;
@@ -12,10 +12,6 @@ export class Board {
   selected?: Piece | null;
   socket?: Socket;
   validMoves?: number[][];
-
-  constructor() {
-    this.gameStarted = false;
-  }
 
   setPieces(pieces: Pieces) {
     for (const i in pieces)

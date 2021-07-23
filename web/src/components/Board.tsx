@@ -8,6 +8,13 @@ import { getFlippedBoard } from "../utils/flipBoard";
 import { useForceUpdate } from "../utils/forceUpdate";
 import pieces from "../assets/pieces.png";
 import piecesOffset from "../assets/piecesOffset.json";
+import styled from "styled-components";
+import {
+  BoardWrapper,
+  GameOverWrapper,
+  GameInfoWrapper,
+  UserWrapper,
+} from "../ui/game";
 
 interface Props {
   me: User;
@@ -80,20 +87,15 @@ const Board: React.FC<Props> = ({ me }) => {
 
   return (
     <div style={{ display: "flex" }}>
-      <div
+      <BoardWrapper
         className="Board"
         style={{ pointerEvents: Board.gameStarted ? "all" : "none" }}
       >
-        <div
-          style={{
-            position: "absolute",
-            zIndex: 300,
-            color: "#27e",
-            fontSize: 40,
-          }}
-        >
-          {gameEnded && <h1>game ended</h1>}
-        </div>
+        {gameEnded && (
+          <GameOverWrapper>
+            <h1>game ended</h1>
+          </GameOverWrapper>
+        )}
         {(
           (flipBoard ? getFlippedBoard(Board.pieces) : Board.pieces) as Pieces
         ).map((x, idxX) => (
@@ -168,23 +170,16 @@ const Board: React.FC<Props> = ({ me }) => {
             })}
           </div>
         ))}
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
+      </BoardWrapper>
+      <GameInfoWrapper>
+        <UserWrapper active={Board.activePlayer === Opponent?.id}>
           {Board.gameStarted && (
             <div>
-              <h2>{Board.activePlayer === Opponent?.id && "Active"}</h2>
               {Opponent && Opponent.name}
               {Opponent && Opponent.id}
             </div>
           )}
-        </div>
+        </UserWrapper>
         {gameEnded && (
           <div>
             <button
@@ -196,16 +191,16 @@ const Board: React.FC<Props> = ({ me }) => {
             </button>
           </div>
         )}
-        <div>
+        <UserWrapper active={Board.activePlayer === MePlayer?.id}>
           {Board.gameStarted && (
             <div>
-              <h2>{Board.activePlayer === MePlayer?.id && "Active"}</h2>
               {MePlayer && MePlayer.name}
+              {"(You)"}
               {MePlayer && MePlayer.id}
             </div>
           )}
-        </div>
-      </div>
+        </UserWrapper>
+      </GameInfoWrapper>
     </div>
   );
 };
