@@ -7,5 +7,5 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 8000
-CMD [ "node", "dist/index.js" ]
+EXPOSE 5000
+CMD [ "npx", "serve -s", "build" ]

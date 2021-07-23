@@ -22,7 +22,7 @@ const GamesDashboard = () => {
       return setRedirect(true);
     }
 
-    axios.get("http://localhost:8000/api/games").then((res) => {
+    axios.get(`${process.env.REACT_APP_SERVER_URL}/api/games`).then((res) => {
       setGames(res.data.games);
     });
 
@@ -30,7 +30,6 @@ const GamesDashboard = () => {
   }, []);
 
   if (redirect) return <Redirect to="/" />;
-  console.log(games);
 
   return (
     <div>

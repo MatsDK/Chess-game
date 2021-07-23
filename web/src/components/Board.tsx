@@ -14,6 +14,7 @@ import {
   GameOverWrapper,
   GameInfoWrapper,
   UserWrapper,
+  Cell,
 } from "../ui/game";
 
 interface Props {
@@ -82,6 +83,7 @@ const Board: React.FC<Props> = ({ me }) => {
       setGameEnded(true);
     });
 
+    console.log(process.env);
     return () => {};
   }, [Board, me, socket]);
 
@@ -120,9 +122,9 @@ const Board: React.FC<Props> = ({ me }) => {
                 isHighlighted = true;
 
               return (
-                <div
+                <Cell
+                  gray={gray}
                   key={`${idxX}-${idxY}`}
-                  className={`cell ${gray ? "gray" : ""}`}
                   onClick={() => {
                     let highlighted = [];
 
@@ -144,7 +146,7 @@ const Board: React.FC<Props> = ({ me }) => {
                         width: 100,
                         height: 100,
                         borderRadius: "50%",
-                        backgroundColor: "#27e",
+                        backgroundColor: "#18438e",
                       }}
                     />
                   )}
@@ -165,7 +167,7 @@ const Board: React.FC<Props> = ({ me }) => {
                       alt="piece"
                     />
                   )}
-                </div>
+                </Cell>
               );
             })}
           </div>

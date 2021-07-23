@@ -12,17 +12,7 @@ code {
     monospace;
 }
 
-.cell {
-  width: 100px;
-  height: 100px;
-}
-
-.cell.gray {
-  background-color: #999;
-}
-
 .Board {
   display: flex;
-  border: 1px solid #999;
   width: fit-content;
 }
