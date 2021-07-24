@@ -24,7 +24,8 @@ export class Board {
             thisPiece.y,
             thisPiece.name,
             thisPiece.playerId,
-            thisPiece.playerId === this.players?.white.id
+            thisPiece.playerId === this.players?.white.id,
+            this
           );
         }
 
@@ -63,7 +64,10 @@ export class Board {
       (this.pieces[x][y] as Piece).playerId === this.me?.id
     ) {
       this.selected = this.pieces[x][y];
-      this.validMoves = (this.pieces[x][y] as Piece).getMoves(this.pieces);
+      this.validMoves = (this.pieces[x][y] as Piece).getMoves(
+        this.pieces,
+        true
+      );
     }
 
     return this.selected
@@ -93,7 +97,7 @@ export class Board {
         if (!(thisPiece instanceof Piece) || thisPiece.playerId !== this.me?.id)
           continue;
 
-        for (const [x, y] of thisPiece.getMoves(this.pieces)) {
+        for (const [x, y] of thisPiece.getMoves(this.pieces, false)) {
           [thisPiece.x, thisPiece.y] = [x, y];
           this.pieces[x][y] = this.pieces[i][j];
           this.pieces[i][j] = 0;
@@ -112,10 +116,17 @@ export class Board {
     return true;
   }
 
-  isCheck({ pieces = this.pieces }: { pieces?: Pieces }): boolean {
+  isCheck({
+    pieces = this.pieces,
+    ...rest
+  }: {
+    pieces?: Pieces;
+    kingPos?: number[];
+  }): boolean {
     if (!pieces.length || !this.me) return false;
-    const kingPos = this.getKingPos(pieces),
+    const kingPos = rest.kingPos || this.getKingPos(pieces),
       attacks: number[][] = [];
+    console.log(rest, kingPos);
 
     for (let i = 0; i <= 7; i++) {
       for (let j = 0; j <= 7; j++) {
@@ -126,7 +137,7 @@ export class Board {
           (thisPiece as Piece).playerId !== this.me?.id &&
           kingPos &&
           thisPiece
-            .getMoves(pieces, this.me?.id)
+            .getMoves(pieces, false, this.me?.id)
             .find(([x, y]) => x === kingPos[0] && y === kingPos[1])
         )
           attacks.push([i, j]);

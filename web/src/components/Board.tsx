@@ -8,7 +8,6 @@ import { getFlippedBoard } from "../utils/flipBoard";
 import { useForceUpdate } from "../utils/forceUpdate";
 import pieces from "../assets/pieces.png";
 import piecesOffset from "../assets/piecesOffset.json";
-import styled from "styled-components";
 import {
   BoardWrapper,
   GameOverWrapper,
@@ -36,23 +35,23 @@ const Board: React.FC<Props> = ({ me }) => {
 
     socket.on("startGame", (players, pieces) => {
       if (Board.gameStarted) Board.reset();
+      setGameEnded(false);
       Board.players = players;
-      Board.setPieces(pieces);
 
       const playersArr: User[] = Object.values(players);
       const meIdx = playersArr.findIndex((player: User) => player.id === me.id);
       if (meIdx != null) playersArr[meIdx].me = true;
-
-      Board.gameStarted = true;
-
       setMePlayer(playersArr[meIdx]);
       setOpponent(playersArr[!meIdx ? 1 : 0]);
 
       Board.me = playersArr[meIdx];
       Board.opponent = playersArr[!meIdx ? 1 : 0];
 
+      Board.gameStarted = true;
+
+      Board.setPieces(pieces);
       setFlipBoard(players.black.id === me.id);
-      setGameEnded(false);
+      forceUpdate();
     });
 
     socket.on("setActivePlayer", (playerId) => {
@@ -67,9 +66,7 @@ const Board: React.FC<Props> = ({ me }) => {
     });
 
     socket.on("check", () => {
-      if (Board.isCheckMate()) {
-        socket.emit("checkmate", Board.me?.id);
-      }
+      if (Board.isCheckMate()) socket.emit("checkmate", Board.me?.id);
     });
 
     socket.on("disconnectedPlayer", () => {
@@ -83,7 +80,6 @@ const Board: React.FC<Props> = ({ me }) => {
       setGameEnded(true);
     });
 
-    console.log(process.env);
     return () => {};
   }, [Board, me, socket]);
 

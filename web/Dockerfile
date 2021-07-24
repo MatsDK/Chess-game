@@ -7,5 +7,5 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 5000
-CMD [ "npx", "serve -s", "build" ]
+EXPOSE 3000
+CMD [ "npm", "start" ] 

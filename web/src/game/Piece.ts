@@ -6,6 +6,7 @@ import {
   queen_directions,
   rook_directions,
 } from "../utils/contants";
+import { Board } from "./Board";
 
 export class Piece {
   x: number;
@@ -14,22 +15,25 @@ export class Piece {
   playerId: string;
   hasMoved: boolean = false;
   isWhite: boolean;
+  Board: Board;
 
   constructor(
     x: number,
     y: number,
     name: string,
     playerId: string,
-    isWhite: boolean
+    isWhite: boolean,
+    Board: Board
   ) {
     this.x = x;
     this.y = y;
     this.name = name;
     this.playerId = playerId;
     this.isWhite = isWhite;
+    this.Board = Board;
   }
 
-  getMoves(pieces: Pieces, opponentId?: string): number[][] {
+  getMoves(pieces: Pieces, check: boolean, opponentId?: string): number[][] {
     let moves: number[][] = [];
 
     if (this.name === "P")
@@ -38,12 +42,16 @@ export class Piece {
       moves = [...moves, ...this.getKnightMoves(pieces, opponentId)];
     else if (this.name === "B")
       moves = [...moves, ...this.getBishopMoves(pieces, opponentId)];
+    else if (this.name === "Q")
+      moves = [...moves, ...this.getQueenMoves(pieces, opponentId)];
     else if (this.name === "R")
       moves = [...moves, ...this.getRookMoves(pieces, opponentId)];
     else if (this.name === "K")
-      moves = [...moves, ...this.getKingMoves(pieces, opponentId)];
-    else if (this.name === "Q")
-      moves = [...moves, ...this.getQueenMoves(pieces, opponentId)];
+      moves = [
+        ...moves,
+        ...this.getKingMoves(pieces, opponentId),
+        ...(check ? this.getCastleMoves(pieces, opponentId) : []),
+      ];
 
     return moves;
   }
@@ -116,9 +124,69 @@ export class Piece {
     pieces: Pieces,
     opponentId: string | undefined
   ): number[][] => {
-    console.log("get castle moves");
     return this.getMovesWithDirections(pieces, rook_directions, opponentId);
   };
+
+  getCastleMoves(pieces: Pieces, opponentId: string | undefined): number[][] {
+    const moves: number[][] = [];
+
+    if (this.hasMoved) return moves;
+
+    const rookPositions: number[][] = this.getRookPositions(pieces),
+      kingPos = [this.x, this.y];
+
+    if (this.Board.isCheck({ pieces })) return moves;
+
+    for (const [i, j] of rookPositions) {
+      if ((pieces[i][j] as Piece).hasMoved) continue;
+
+      const [idx, max] = [i, this.x].sort((a, b) => a - b);
+      let currIdx: number = idx + 1,
+        isValid: boolean = true;
+
+      while (currIdx < max) {
+        if (pieces[currIdx][j] instanceof Piece) {
+          isValid = false;
+          break;
+        }
+
+        currIdx += 1;
+      }
+
+      if (isValid)
+        for (let newX = 1; newX < 3; newX++) {
+          let x = this.x + newX;
+          if (i - this.x === -4) x = this.x - newX;
+
+          pieces[x][j] = pieces[kingPos[0]][this.y];
+          [pieces[x][this.y].x, pieces[x][this.y].y] = [x, this.y];
+
+          pieces[kingPos[0]][this.y] = 0;
+
+          const checked = this.Board.isCheck({ pieces, kingPos: [x, j] });
+
+          pieces[kingPos[0]][this.y] = pieces[x][this.y];
+          [pieces[kingPos[0]][this.y].x, pieces[kingPos[0]][this.y].y] = [
+            kingPos[0],
+            this.y,
+          ];
+
+          pieces[x][j] = 0;
+
+          if (checked) {
+            isValid = false;
+            break;
+          }
+        }
+
+      if (isValid) {
+        if (i - this.x == -4) moves.push([this.x - 2, j]);
+        else moves.push([this.x + 2, j]);
+      }
+    }
+
+    return moves;
+  }
 
   getKnightMoves(pieces: Pieces, opponentId: string | undefined): number[][] {
     const moves: number[][] = [];
@@ -194,5 +262,22 @@ export class Piece {
     }
 
     return moves;
+  }
+
+  getRookPositions(pieces: Pieces): number[][] {
+    const positions: number[][] = [];
+
+    for (let i = 0; i <= 7; i++) {
+      for (let j = 0; j <= 7; j++) {
+        if (
+          pieces[i][j] instanceof Piece &&
+          (pieces[i][j] as Piece).name === "R" &&
+          (pieces[i][j] as Piece).playerId === this.playerId
+        )
+          positions.push([i, j]);
+      }
+    }
+
+    return positions;
   }
 }
