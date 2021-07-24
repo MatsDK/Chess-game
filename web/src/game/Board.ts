@@ -1,5 +1,5 @@
 import { Socket } from "socket.io-client";
-import { PiecePos, Pieces, User } from "../types";
+import { PieceMoveObj, PiecePos, Pieces, User } from "../types";
 import { Piece } from "./Piece";
 
 export class Board {
@@ -12,6 +12,7 @@ export class Board {
   selected?: Piece | null;
   socket?: Socket;
   validMoves?: number[][];
+  promotionMenu?: (move: PieceMoveObj) => void;
 
   setPieces(pieces: Pieces) {
     for (const i in pieces)
@@ -49,10 +50,32 @@ export class Board {
       this.selected &&
       this.validMoves?.find(([x1, y1]) => x1 === x && y1 === y)
     ) {
-      this.socket?.emit("move", {
-        from: { x: this.selected.x, y: this.selected.y },
-        to: { x, y },
-      });
+      if (
+        this.selected.name === "P" &&
+        ((this.selected.playerId === this.players?.white.id && y === 0) ||
+          (this.selected.playerId === this.players?.black.id && y === 7)) &&
+        this.promotionMenu
+      ) {
+        this.promotionMenu({
+          from: { x: this.selected.x, y: this.selected.y },
+          to: { x, y },
+        });
+        return [[this.selected.x, this.selected.y], ...this.validMoves];
+      }
+
+      const moves = [
+        {
+          from: { x: this.selected.x, y: this.selected.y },
+          to: { x, y },
+        },
+      ];
+
+      if (this.selected.name === "K" && Math.abs(this.selected.x - x) === 2) {
+        if (x == 2) moves.push({ from: { x: 0, y }, to: { x: 3, y } });
+        else if (x == 6) moves.push({ from: { x: 7, y }, to: { x: 5, y } });
+      }
+
+      this.socket?.emit("move", moves);
 
       this.selected.hasMoved = true;
 
@@ -75,7 +98,11 @@ export class Board {
       : [];
   }
 
-  movePiece(from: PiecePos, to: PiecePos) {
+  movePiece(
+    from: PiecePos,
+    to: PiecePos,
+    name: string | undefined
+  ): number[][] {
     if (this.pieces[from.x][from.y] instanceof Piece)
       [
         (this.pieces[from.x][from.y] as Piece).x,
@@ -83,8 +110,13 @@ export class Board {
       ] = [to.x, to.y];
 
     this.pieces[to.x][to.y] = this.pieces[from.x][from.y];
+    if (name) (this.pieces[to.x][to.y] as Piece).name = name;
 
     this.pieces[from.x][from.y] = 0;
+    this.validMoves = [];
+    this.selected = null;
+
+    return [];
   }
 
   isCheckMate(): boolean {
@@ -126,7 +158,6 @@ export class Board {
     if (!pieces.length || !this.me) return false;
     const kingPos = rest.kingPos || this.getKingPos(pieces),
       attacks: number[][] = [];
-    console.log(rest, kingPos);
 
     for (let i = 0; i <= 7; i++) {
       for (let j = 0; j <= 7; j++) {
@@ -162,6 +193,10 @@ export class Board {
     }
 
     return;
+  }
+
+  pawnPromotion(move: PieceMoveObj, newName: string) {
+    this.socket?.emit("pawnPromotion", move, newName);
   }
 
   reset() {

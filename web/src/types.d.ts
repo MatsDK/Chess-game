@@ -17,3 +17,5 @@ export interface PlayersObject {
 export type Pieces = Array<(Piece | 0)[]>;
 
 export type PiecePos = { x: number; y: number };
+
+export type PieceMoveObj = { from: PiecePos; to: PiecePos };

@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "../context/socket";
 import { Board as GameBoard } from "../game/Board";
 import { Piece } from "../game/Piece";
-import { PiecePos, Pieces, User } from "../types";
+import { PieceMoveObj, PiecePos, Pieces, User } from "../types";
 import { getFlippedBoard } from "../utils/flipBoard";
 import { useForceUpdate } from "../utils/forceUpdate";
 import pieces from "../assets/pieces.png";
@@ -14,6 +14,7 @@ import {
   GameInfoWrapper,
   UserWrapper,
   Cell,
+  PromotionMenu,
 } from "../ui/game";
 
 interface Props {
@@ -29,9 +30,16 @@ const Board: React.FC<Props> = ({ me }) => {
   const [flipBoard, setFlipBoard] = useState<boolean>(false);
   const [highlighted, setHighlighted] = useState<number[][]>([]);
   const [gameEnded, setGameEnded] = useState<boolean>(false);
+  const [promotionMenu, setPromotionMenu] = useState<{
+    move: PieceMoveObj;
+  } | null>(null);
 
   useEffect(() => {
     Board.setSocket(socket);
+    Board.promotionMenu = (move: PieceMoveObj) => {
+      console.log("set promotion menu");
+      setPromotionMenu({ move });
+    };
 
     socket.on("startGame", (players, pieces) => {
       if (Board.gameStarted) Board.reset();
@@ -59,11 +67,16 @@ const Board: React.FC<Props> = ({ me }) => {
       forceUpdate();
     });
 
-    socket.on("movePiece", (from: PiecePos, to: PiecePos) => {
-      Board.movePiece(from, to);
+    socket.on(
+      "movePiece",
+      (from: PiecePos, to: PiecePos, name: string | undefined) => {
+        const newHighlighted = Board.movePiece(from, to, name);
+        setHighlighted(newHighlighted);
+        setPromotionMenu(null);
 
-      forceUpdate();
-    });
+        forceUpdate();
+      }
+    );
 
     socket.on("check", () => {
       if (Board.isCheckMate()) socket.emit("checkmate", Board.me?.id);
@@ -117,53 +130,94 @@ const Board: React.FC<Props> = ({ me }) => {
               )
                 isHighlighted = true;
 
+              let showPromotionMenu =
+                promotionMenu &&
+                promotionMenu.move.to.x === (flipBoard ? 7 - idxX : idxX) &&
+                promotionMenu.move.to.y === (flipBoard ? 7 - idxY : idxY);
+
               return (
-                <Cell
-                  gray={gray}
-                  key={`${idxX}-${idxY}`}
-                  onClick={() => {
-                    let highlighted = [];
+                <div key={`${idxX}-${idxY}`}>
+                  <Cell
+                    gray={gray}
+                    onClick={(e) => {
+                      let highlighted: number[][] = [];
 
-                    if (flipBoard)
-                      highlighted = Board.click(7 - idxX, 7 - idxY);
-                    else highlighted = Board.click(idxX, idxY);
+                      if (e.target == e.currentTarget) setPromotionMenu(null);
 
-                    setHighlighted(highlighted);
-                  }}
-                  style={{ position: "relative", overflow: "hidden" }}
-                >
-                  {isHighlighted && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        color: "red",
-                        width: 100,
-                        height: 100,
-                        borderRadius: "50%",
-                        backgroundColor: "#18438e",
-                      }}
-                    />
+                      if (flipBoard)
+                        highlighted = Board.click(7 - idxX, 7 - idxY);
+                      else highlighted = Board.click(idxX, idxY);
+
+                      setHighlighted(highlighted);
+                    }}
+                    style={{ position: "relative", overflow: "hidden" }}
+                  >
+                    {isHighlighted && (
+                      <div
+                        style={{
+                          pointerEvents: "none",
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          color: "red",
+                          width: 100,
+                          height: 100,
+                          borderRadius: "50%",
+                          backgroundColor: "#18438e",
+                        }}
+                      />
+                    )}
+                    {isPiece && (
+                      <img
+                        style={{
+                          marginTop:
+                            isPiece &&
+                            (y as Piece).playerId === Board.players?.black.id
+                              ? -335
+                              : -235,
+                          marginLeft: (piecesOffset as any)[(y as Piece).name],
+                          pointerEvents: "none",
+                          transform: "scale(0.3)",
+                          zIndex: 200,
+                        }}
+                        src={pieces}
+                        alt="piece"
+                      />
+                    )}
+                  </Cell>
+                  {showPromotionMenu && (
+                    <PromotionMenu>
+                      <button
+                        onClick={() =>
+                          Board.pawnPromotion(promotionMenu!.move, "Q")
+                        }
+                      >
+                        queen
+                      </button>
+                      <button
+                        onClick={() =>
+                          Board.pawnPromotion(promotionMenu!.move, "B")
+                        }
+                      >
+                        bishop
+                      </button>
+                      <button
+                        onClick={() =>
+                          Board.pawnPromotion(promotionMenu!.move, "N")
+                        }
+                      >
+                        knight
+                      </button>
+                      <button
+                        onClick={() =>
+                          Board.pawnPromotion(promotionMenu!.move, "R")
+                        }
+                      >
+                        rook
+                      </button>
+                    </PromotionMenu>
                   )}
-                  {isPiece && (
-                    <img
-                      style={{
-                        marginTop:
-                          isPiece &&
-                          (y as Piece).playerId === Board.players?.black.id
-                            ? -335
-                            : -235,
-                        marginLeft: (piecesOffset as any)[(y as Piece).name],
-                        pointerEvents: "none",
-                        transform: "scale(0.3)",
-                        zIndex: 200,
-                      }}
-                      src={pieces}
-                      alt="piece"
-                    />
-                  )}
-                </Cell>
+                </div>
               );
             })}
           </div>

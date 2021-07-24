@@ -42,9 +42,12 @@ export class GameHandler {
     this.setActivePlayer(this.players.white.id);
 
     for (const socket of Object.values(this.sockets)) {
-      socket?.on("move", ({ from, to }) => this.move(from, to));
+      socket?.on("move", (moves) => this.move(moves));
       socket?.on("checkmate", (playerId) => this.checkMate(playerId));
       socket?.on("newGame", () => this.newGame());
+      socket?.on("pawnPromotion", (move, name) =>
+        this.move([{ ...move, name }])
+      );
     }
   }
 
@@ -93,13 +96,18 @@ export class GameHandler {
     else return this.players.white.id;
   }
 
-  move(from: PiecePos, to: PiecePos) {
-    [this.pieces[from.x][from.y], this.pieces[to.x][to.y]] = [
-      0,
-      this.pieces[from.x][from.y],
-    ];
+  move(moves: { from: PiecePos; to: PiecePos; name?: string }[]) {
+    for (const { from, to, name } of moves) {
+      [this.pieces[from.x][from.y], this.pieces[to.x][to.y]] = [
+        0,
+        this.pieces[from.x][from.y],
+      ];
 
-    this.io.to(this.game.id).emit("movePiece", from, to);
+      if (name) (this.pieces[to.x][to.y] as Piece).name = name;
+
+      this.io.to(this.game.id).emit("movePiece", from, to, name);
+    }
+
     this.setActivePlayer();
   }
 }
