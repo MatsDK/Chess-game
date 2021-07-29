@@ -48,9 +48,9 @@ export const Cell = styled.div<{ gray: boolean }>`
 
 export const PromotionMenu = styled.div`
   background-color: #060c16;
-  width: 100px;
-  padding: 10px;
-  border-radius: 15px;
+  padding: 5px 10px;
+
+  border-radius: 4px;
   box-shadow: 3px -2px 10px 10px rgba(0, 0, 0, 0.5);
   transform: translateX(100px);
   top: 0;
@@ -59,10 +59,26 @@ export const PromotionMenu = styled.div`
   align-items: center;
   z-index: 250;
   position: absolute;
+  overflow: hidden;
 
   button {
-    cursor: pointer;
-    height: 80px;
     width: 80px;
+    background-color: transparent;
+    border: 0;
+    color: white;
+    cursor: pointer;
   }
+`;
+
+export const PieceButton = styled.button`
+  border: 1px solid #222935 !important;
+  box-shadow: 3px -2px 5px 5px rgba(11, 11, 11, 0.5);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background-color: transparent;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  height: 80px;
+  width: 80px;
 `;

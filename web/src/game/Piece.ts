@@ -180,7 +180,7 @@ export class Piece {
         }
 
       if (isValid) {
-        if (i - this.x == -4) moves.push([this.x - 2, j]);
+        if (i - this.x === -4) moves.push([this.x - 2, j]);
         else moves.push([this.x + 2, j]);
       }
     }

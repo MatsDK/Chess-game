@@ -71,8 +71,8 @@ export class Board {
       ];
 
       if (this.selected.name === "K" && Math.abs(this.selected.x - x) === 2) {
-        if (x == 2) moves.push({ from: { x: 0, y }, to: { x: 3, y } });
-        else if (x == 6) moves.push({ from: { x: 7, y }, to: { x: 5, y } });
+        if (x === 2) moves.push({ from: { x: 0, y }, to: { x: 3, y } });
+        else if (x === 6) moves.push({ from: { x: 7, y }, to: { x: 5, y } });
       }
 
       this.socket?.emit("move", moves);

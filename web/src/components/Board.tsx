@@ -15,6 +15,7 @@ import {
   UserWrapper,
   Cell,
   PromotionMenu,
+  PieceButton,
 } from "../ui/game";
 
 interface Props {
@@ -37,7 +38,6 @@ const Board: React.FC<Props> = ({ me }) => {
   useEffect(() => {
     Board.setSocket(socket);
     Board.promotionMenu = (move: PieceMoveObj) => {
-      console.log("set promotion menu");
       setPromotionMenu({ move });
     };
 
@@ -142,7 +142,7 @@ const Board: React.FC<Props> = ({ me }) => {
                     onClick={(e) => {
                       let highlighted: number[][] = [];
 
-                      if (e.target == e.currentTarget) setPromotionMenu(null);
+                      if (e.target === e.currentTarget) setPromotionMenu(null);
 
                       if (flipBoard)
                         highlighted = Board.click(7 - idxX, 7 - idxY);
@@ -187,33 +187,76 @@ const Board: React.FC<Props> = ({ me }) => {
                   </Cell>
                   {showPromotionMenu && (
                     <PromotionMenu>
-                      <button
+                      <PieceButton
                         onClick={() =>
                           Board.pawnPromotion(promotionMenu!.move, "Q")
                         }
                       >
-                        queen
-                      </button>
-                      <button
+                        <img
+                          style={{
+                            marginTop: -255,
+                            marginLeft: (piecesOffset as any)["Q"] - 40,
+                            pointerEvents: "none",
+                            transform: "scale(0.25)",
+                            zIndex: 200,
+                          }}
+                          src={pieces}
+                          alt="piece"
+                        />
+                      </PieceButton>
+                      <PieceButton
                         onClick={() =>
                           Board.pawnPromotion(promotionMenu!.move, "B")
                         }
                       >
-                        bishop
-                      </button>
-                      <button
+                        <img
+                          style={{
+                            marginTop: -255,
+                            marginLeft: (piecesOffset as any)["B"] - 24,
+                            pointerEvents: "none",
+                            transform: "scale(0.25)",
+                            zIndex: 200,
+                          }}
+                          src={pieces}
+                          alt="piece"
+                        />
+                      </PieceButton>
+                      <PieceButton
                         onClick={() =>
                           Board.pawnPromotion(promotionMenu!.move, "N")
                         }
                       >
-                        knight
-                      </button>
-                      <button
+                        <img
+                          style={{
+                            marginTop: -255,
+                            marginLeft: (piecesOffset as any)["N"] - 8,
+                            pointerEvents: "none",
+                            transform: "scale(0.25)",
+                            zIndex: 200,
+                          }}
+                          src={pieces}
+                          alt="piece"
+                        />
+                      </PieceButton>
+                      <PieceButton
                         onClick={() =>
                           Board.pawnPromotion(promotionMenu!.move, "R")
                         }
                       >
-                        rook
+                        <img
+                          style={{
+                            marginTop: -255,
+                            marginLeft: (piecesOffset as any)["R"] + 8,
+                            pointerEvents: "none",
+                            transform: "scale(0.25)",
+                            zIndex: 200,
+                          }}
+                          src={pieces}
+                          alt="piece"
+                        />
+                      </PieceButton>
+                      <button onClick={() => setPromotionMenu(null)}>
+                        close
                       </button>
                     </PromotionMenu>
                   )}
