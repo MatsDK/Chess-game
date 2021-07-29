@@ -13,9 +13,23 @@ export const GameOverWrapper = styled.div`
   z-index: 3000;
   background-color: #00000073;
 
+  div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
   h1 {
     font-size: 100px;
     color: #27e;
+    margin: 0;
+  }
+
+  span {
+    font-weight: 600;
+    font-size: 60px;
+    color: #fff;
   }
 `;
 

@@ -15,6 +15,7 @@ export class GameHandler {
     .fill(0)
     .map((_) => Array(8).fill(0));
   activePlayer: string = "";
+  score: { [id: string]: number } | null = null;
 
   constructor(
     players: PlayersType,
@@ -26,6 +27,8 @@ export class GameHandler {
     this.game = game;
     this.io = io;
     this.sockets = sockets;
+
+    this.score = { [players.black.id]: 0, [players.white.id]: 0 };
 
     for (const i in this.pieces)
       for (const j in this.pieces[i])
@@ -78,11 +81,20 @@ export class GameHandler {
   }
 
   checkMate(playerId: string | undefined) {
-    this.io.to(this.game.id).emit("endGame");
+    const winnerId: string = this.getInactivePlayerId(playerId);
+
+    if (this.score) this.score[winnerId]! += 1;
+
+    this.io
+      .to(this.game.id)
+      .emit("endGame", this.getInactivePlayerId(playerId), this.score);
   }
 
+  getPlayerColorWithId = (playerId: string): "black" | "white" =>
+    this.players.white.id === playerId ? "white" : "black";
+
   setActivePlayer(playerId?: string) {
-    if (!playerId) playerId = this.getNextActivePlayer();
+    if (!playerId) playerId = this.getInactivePlayerId();
 
     this.io.to(this.game.id).emit("setActivePlayer", playerId);
     this.io.to(playerId).emit("check");
@@ -90,9 +102,8 @@ export class GameHandler {
     this.activePlayer = playerId;
   }
 
-  getNextActivePlayer(): string {
-    if (this.activePlayer === this.players.white.id)
-      return this.players.black.id;
+  getInactivePlayerId(activePlayer = this.activePlayer): string {
+    if (activePlayer === this.players.white.id) return this.players.black.id;
     else return this.players.white.id;
   }
 

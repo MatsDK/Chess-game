@@ -30,7 +30,11 @@ const Board: React.FC<Props> = ({ me }) => {
   const [Opponent, setOpponent] = useState<User | null>(null);
   const [flipBoard, setFlipBoard] = useState<boolean>(false);
   const [highlighted, setHighlighted] = useState<number[][]>([]);
-  const [gameEnded, setGameEnded] = useState<boolean>(false);
+  const [score, setScore] = useState<{ [id: string]: number } | null>(null);
+  const [gameEnded, setGameEnded] = useState<{
+    status: boolean;
+    won: boolean;
+  } | null>(null);
   const [promotionMenu, setPromotionMenu] = useState<{
     move: PieceMoveObj;
   } | null>(null);
@@ -43,7 +47,7 @@ const Board: React.FC<Props> = ({ me }) => {
 
     socket.on("startGame", (players, pieces) => {
       if (Board.gameStarted) Board.reset();
-      setGameEnded(false);
+      setGameEnded(null);
       Board.players = players;
 
       const playersArr: User[] = Object.values(players);
@@ -89,9 +93,13 @@ const Board: React.FC<Props> = ({ me }) => {
       socket.disconnect();
     });
 
-    socket.on("endGame", () => {
-      setGameEnded(true);
-    });
+    socket.on(
+      "endGame",
+      (winnerId: string | undefined, score: { [id: string]: number }) => {
+        setScore(score);
+        setGameEnded({ status: true, won: winnerId === Board.me?.id });
+      }
+    );
 
     return () => {};
   }, [Board, me, socket]);
@@ -102,9 +110,12 @@ const Board: React.FC<Props> = ({ me }) => {
         className="Board"
         style={{ pointerEvents: Board.gameStarted ? "all" : "none" }}
       >
-        {gameEnded && (
+        {gameEnded?.status && (
           <GameOverWrapper>
-            <h1>game ended</h1>
+            <div>
+              <h1>game ended</h1>
+              <span>{gameEnded.won ? "You won" : "You lost"}</span>
+            </div>
           </GameOverWrapper>
         )}
         {(
@@ -138,6 +149,7 @@ const Board: React.FC<Props> = ({ me }) => {
               return (
                 <div key={`${idxX}-${idxY}`}>
                   <Cell
+                    // draggable={isPiece}
                     gray={gray}
                     onClick={(e) => {
                       let highlighted: number[][] = [];
@@ -272,10 +284,12 @@ const Board: React.FC<Props> = ({ me }) => {
             <div>
               {Opponent && Opponent.name}
               {Opponent && Opponent.id}
+              <br />
+              {score ? score[Opponent?.id || ""] || 0 : 0}
             </div>
           )}
         </UserWrapper>
-        {gameEnded && (
+        {gameEnded?.status && (
           <div>
             <button
               onClick={() => {
@@ -292,6 +306,8 @@ const Board: React.FC<Props> = ({ me }) => {
               {MePlayer && MePlayer.name}
               {"(You)"}
               {MePlayer && MePlayer.id}
+              <br />
+              {score ? score[MePlayer?.id || ""] || 0 : 0}
             </div>
           )}
         </UserWrapper>
